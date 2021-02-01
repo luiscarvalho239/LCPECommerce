@@ -1,6 +1,8 @@
 ﻿@page "/clients/edit/{clientId:int}"
+@using LCPECommerce.Client.Services
 @inject HttpClient http
 @inject NavigationManager navigationManager
+@inject IAccountService AccountService
 
 <h3>Edit</h3>
 
@@ -32,7 +34,9 @@ else
 
     async Task EditClient()
     {
-        await http.PutAsJsonAsync($"api/clients/{clientId}", client);
+        //await http.PutAsJsonAsync($"api/clients/{clientId}", client);
+        await AccountService.Update(clientId, client);
+
         if (isConnected) await SendMessage();
         navigationManager.NavigateTo("clients");
     }

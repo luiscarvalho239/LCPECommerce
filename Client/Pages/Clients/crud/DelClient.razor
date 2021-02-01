@@ -1,7 +1,9 @@
 ﻿@page "/clients/delete/{clientId:int}"
+@using LCPECommerce.Client.Services
 @inject HttpClient http
 @inject NavigationManager navigationManager
 @inject IJSRuntime js
+@inject IAccountService AccountService
 
 <h3>Delete</h3>
 
@@ -36,7 +38,8 @@ else
 
         if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {client.FullName}?"))
         {
-            await http.DeleteAsync($"api/clients/{clientId}");
+            //await http.DeleteAsync($"api/clients/{clientId}");
+            await AccountService.Delete(clientId);
             if (isConnected) await SendMessage();
             navigationManager.NavigateTo("clients");
         }

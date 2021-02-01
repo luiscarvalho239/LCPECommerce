@@ -100,8 +100,14 @@ namespace LCPECommerce.Server.Controllers
             return Ok(new
             {
                 Id = client.Id,
+                Username = client.Username,
                 Email = client.Email,
                 Password = client.Password,
+                FullName = client.FullName,
+                BillingAddress = client.BillingAddress,
+                ShippingAddress = client.ShippingAddress,
+                Country = client.Country,
+                Phone = client.Phone,
                 Token = token
             });
         }

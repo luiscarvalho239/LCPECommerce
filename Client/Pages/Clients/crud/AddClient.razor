@@ -1,6 +1,8 @@
 ﻿@page "/clients/add"
+@using LCPECommerce.Client.Services
 @inject HttpClient http
 @inject NavigationManager navigationManager
+@inject IAccountService AccountService
 
 <h3>Create</h3>
 
@@ -22,7 +24,8 @@
 
     async Task CreateClient()
     {
-        await http.PostAsJsonAsync("api/clients", client);
+        //await http.PostAsJsonAsync("api/clients", client);
+        await AccountService.Register(client);
         if (isConnected) await SendMessage();
         navigationManager.NavigateTo("clients");
     }

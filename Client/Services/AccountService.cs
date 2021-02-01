@@ -81,6 +81,7 @@ namespace LCPECommerce.Client.Services
                 // update local storage
                 Client.Username = model.Username;
                 Client.Email = model.Email;
+                Client.Password = model.Password;
                 Client.FullName = model.FullName;
                 Client.BillingAddress = model.BillingAddress;
                 Client.ShippingAddress = model.ShippingAddress;

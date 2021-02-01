@@ -1,0 +1,170 @@
+﻿@inject NavigationManager navManager
+
+<EditForm Model="@Products" OnValidSubmit="@OnValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label>Name:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Products.Name" />
+            }
+            else
+            {
+                <input type="text" value="@Products.Name" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.Name)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Price:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputNumber @bind-Value="@Products.Price" @bind-Value:format="C2" />
+            }
+            else
+            {
+                <input type="text" inputmode="decimal" value="@Products.Price" step="any" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.Price)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Desc:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Products.Desc" />
+            }
+            else
+            {
+                <input type="text" value="@Products.Desc" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.Desc)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Image:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Products.Image" />
+            }
+            else
+            {
+                <input type="text" value="@Products.Image" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.Image)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Category:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Products.Category" />
+            }
+            else
+            {
+                <input type="text" value="@Products.Category" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.Category)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Date of Creation:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputDateTime @bind-Value="@Products.CreationDate" />
+            }
+            else
+            {
+                <input type="datetime" value="@Products.CreationDate" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.CreationDate)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Stock:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputNumber @bind-Value="@Products.Stock" />
+            }
+            else
+            {
+                <input type="number" value="@Products.Stock" min="1" max="999" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.Stock)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Product ID:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputNumber @bind-Value="@Products.ProductId" />
+            }
+            else
+            {
+                <input type="number" value="@Products.ProductId" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.ProductId)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Category ID:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputNumber @bind-Value="@Products.CategoryId" />
+            }
+            else
+            {
+                <input type="number" value="@Products.CategoryId" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.CategoryId)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Option ID:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputNumber @bind-Value="@Products.OptionId" />
+            }
+            else
+            {
+                <input type="number" value="@Products.OptionId" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Products.OptionId)" />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">@ButtonText</button>
+    <button type="button" class="btn btn-primary" @onclick="@Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    [Parameter] public Products Products { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Save Product";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public bool isReadOnly { get; set; } = false;
+
+    void Cancel()
+    {
+        navManager.NavigateTo("products");
+    }
+}

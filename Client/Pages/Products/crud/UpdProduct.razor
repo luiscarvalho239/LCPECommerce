@@ -1,0 +1,46 @@
+﻿@page "/products/edit/{productId:int}"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Edit</h3>
+
+@if (product.Id != productId)
+{
+    <p>The product does not exist</p>
+}
+else
+{
+    <ProductsForm ButtonText="Edit Product" Products="@product" OnValidSubmit="@EditProduct" isReadOnly="false" />
+}
+
+@code {
+    [Parameter] public int productId { get; set; }
+    Products product = new Products();
+
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        product = await http.GetFromJsonAsync<Products>($"api/products/{productId}");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/ProductHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task EditProduct()
+    {
+        await http.PutAsJsonAsync($"api/products/{productId}", product);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("products");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

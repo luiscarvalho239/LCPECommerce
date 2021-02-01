@@ -1,0 +1,54 @@
+﻿@page "/orders/delete/{orderId:int}"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+@inject IJSRuntime js
+
+<h3>Delete</h3>
+
+@if (order.Id != orderId)
+{
+    <p>The order does not exist</p>
+}
+else
+{
+    <OrdersForm ButtonText="Delete Order" Orders="@order" OnValidSubmit="@DeleteOrder" isReadOnly="true" />
+}
+
+@code {
+    [Parameter] public int orderId { get; set; }
+    Orders order = new Orders();
+
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        order = await http.GetFromJsonAsync<Orders>($"api/orders/{orderId}");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/OrderHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task DeleteOrder()
+    {
+        if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {order.Id}?"))
+        {
+            await http.DeleteAsync($"api/orders/{orderId}");
+            if (isConnected) await SendMessage();
+            navigationManager.NavigateTo("orders");
+        }
+        else
+        {
+            navigationManager.NavigateTo("orders");
+        }
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

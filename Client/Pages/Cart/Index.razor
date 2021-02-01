@@ -1,0 +1,122 @@
+﻿@page "/cart"
+@inject HttpClient http
+@inject NavigationManager NavManager
+
+<h3>
+    <i class="oi oi-cart"></i>
+    Cart
+</h3>
+
+@if (orders == null)
+{
+    <p>Loading...</p>
+}
+else if (orders.Length == 0)
+{
+    <p>There are not records in the database</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Email</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>ShippingAddress</th>
+                    <th>ClientId</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in orders)
+                {
+                    <tr>
+                        <td>@order.Id</td>
+                        <td>@order.OrderName</td>
+                        <td>@order.OrderAddress</td>
+                        <td>@order.OrderEmail</td>
+                        <td>@order.OrderDate</td>
+                        <td>@order.OrderStatus</td>
+                        <td>@String.Format("{0:C2}", @order.Price)</td>
+                        <td>@order.Quantity</td>
+                        <td>@order.ShippingAddress</td>
+                        <td>@order.ClientId</td>
+                        <td>
+                            <a class="btn btn-success" href="orders/edit/@order.Id">Edit</a>
+                            <a class="btn btn-danger" href="orders/delete/@order.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Total: @String.Format("{0:C2}", totalprice)</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}
+
+@code {
+    Orders[] orders { get; set; }
+    private HubConnection hubConnection;
+    decimal totalprice = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    async Task LoadOrders()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavManager.ToAbsoluteUri("/OrderHub"))
+            .Build();
+
+        hubConnection.On("ReceiveMessage", () =>
+        {
+            CallLoadData();
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+        await LoadData();
+    }
+
+    private void CallLoadData()
+    {
+        Task.Run(async () =>
+        {
+            await LoadData();
+        });
+    }
+
+    protected async Task LoadData()
+    {
+        orders = await http.GetFromJsonAsync<Orders[]>("api/orders");
+        totalprice = (decimal)orders.Sum(x => x.Price * x.Quantity);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

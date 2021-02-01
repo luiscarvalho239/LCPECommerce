@@ -1,0 +1,94 @@
+﻿@page "/categories"
+@inject HttpClient http
+@inject NavigationManager NavManager
+
+<h3>Categorias</h3>
+
+<div>
+    <a class="btn btn-success" href="categories/add">New Category</a>
+</div>
+
+@if (categories == null)
+{
+    <p>Loading...</p>
+}
+else if (categories.Length == 0)
+{
+    <p>There are not records in the database</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Desc</th>
+                    <th>Image</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in categories)
+                {
+                    <tr>
+                        <td>@category.Id</td>
+                        <td>@category.Name</td>
+                        <td>@category.Desc</td>
+                        <td>@category.Image</td>
+                        <td>
+                            <a class="btn btn-success" href="categories/edit/@category.Id">Edit</a>
+                            <a class="btn btn-danger" href="categories/delete/@category.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    Categories[] categories { get; set; }
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategories();
+    }
+
+    async Task LoadCategories()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavManager.ToAbsoluteUri("/CategoryHub"))
+            .Build();
+
+        hubConnection.On("ReceiveMessage", () =>
+        {
+            CallLoadData();
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+        await LoadData();
+    }
+
+    private void CallLoadData()
+    {
+        Task.Run(async () =>
+        {
+            await LoadData();
+        });
+    }
+
+    protected async Task LoadData()
+    {
+        categories = await http.GetFromJsonAsync<Categories[]>("api/categories");
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

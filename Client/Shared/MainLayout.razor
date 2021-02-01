@@ -1,0 +1,48 @@
+﻿@inherits LayoutComponentBase
+@using LCPECommerce.Client.Services
+@inject IAccountService AccountService
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4">
+            @if (LoggedIn)
+            {
+                <div class="mr-md-auto">
+                    <a class="cname" href="@($"clients/edit/{clientId}")">
+                        <span>@clientName</span>
+                    </a>
+                    <a class="logout" href="account/logout">Logout</a>
+                </div>
+            }
+            else
+            {
+                <a class="login mr-md-auto" href="account/login">
+                    <span class="oi oi-account-login" aria-hidden="true"></span> Login
+                </a>
+            }
+
+            <a href="/cart" target="_blank" class="btn ml-md-auto">
+                <i class="oi oi-cart"></i>
+            </a>
+        </div>
+
+        <div class="content px-4">
+            <Alert />
+            @Body
+        </div>
+    </div>
+</div>
+
+@code {
+    private int clientId => AccountService.Client != null ? AccountService.Client.Id : 0;
+    private string clientName => AccountService.Client != null ? AccountService.Client.FullName : "Guest";
+
+    public bool LoggedIn
+    {
+        get { return AccountService.Client != null; }
+    }
+}

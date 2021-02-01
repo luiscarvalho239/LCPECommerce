@@ -1,0 +1,36 @@
+﻿@page "/options/add"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Create</h3>
+
+<OptionsForm ButtonText="Create Option" Options="@option" OnValidSubmit="@CreateOption" isReadOnly="false" />
+
+@code {
+    Options option = new Options();
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/OptionHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task CreateOption()
+    {
+        await http.PostAsJsonAsync("api/options", option);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("options");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

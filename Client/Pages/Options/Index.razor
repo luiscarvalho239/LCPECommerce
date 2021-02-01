@@ -1,0 +1,90 @@
+﻿@page "/options"
+@inject HttpClient http
+@inject NavigationManager NavManager
+
+<h3>Opções</h3>
+
+<div>
+    <a class="btn btn-success" href="options/add">New Option</a>
+</div>
+
+@if (options == null)
+{
+    <p>Loading...</p>
+}
+else if (options.Length == 0)
+{
+    <p>There are not records in the database</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var option in options)
+                {
+                    <tr>
+                        <td>@option.Id</td>
+                        <td>@option.OptionName</td>
+                        <td>
+                            <a class="btn btn-success" href="options/edit/@option.Id">Edit</a>
+                            <a class="btn btn-danger" href="options/delete/@option.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    Options[] options { get; set; }
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOptions();
+    }
+
+    async Task LoadOptions()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavManager.ToAbsoluteUri("/OptionHub"))
+            .Build();
+
+        hubConnection.On("ReceiveMessage", () =>
+        {
+            CallLoadData();
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+        await LoadData();
+    }
+
+    private void CallLoadData()
+    {
+        Task.Run(async () =>
+        {
+            await LoadData();
+        });
+    }
+
+    protected async Task LoadData()
+    {
+        options = await http.GetFromJsonAsync<Options[]>("api/options");
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

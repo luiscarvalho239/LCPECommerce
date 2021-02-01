@@ -1,0 +1,36 @@
+﻿@page "/categories/add"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Create</h3>
+
+<CategoriesForm ButtonText="Create Category" Categories="@category" OnValidSubmit="@CreateCategory" isReadOnly="false" />
+
+@code {
+    Categories category = new Categories();
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/CategoryHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task CreateCategory()
+    {
+        await http.PostAsJsonAsync("api/categories", category);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("categories");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

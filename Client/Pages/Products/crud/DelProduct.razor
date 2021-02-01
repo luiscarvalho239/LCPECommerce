@@ -1,0 +1,53 @@
+﻿@page "/products/delete/{productId:int}"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+@inject IJSRuntime js
+
+<h3>Delete</h3>
+
+@if (product.Id != productId)
+{
+    <p>The product does not exist</p>
+}
+else
+{
+    <ProductsForm ButtonText="Delete Product" Products="@product" OnValidSubmit="@DeleteProduct" isReadOnly="true" />
+}
+
+@code {
+    [Parameter] public int productId { get; set; }
+    Products product = new Products();
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        product = await http.GetFromJsonAsync<Products>($"api/products/{productId}");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/ProductHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task DeleteProduct()
+    {
+        if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {product.Name}?"))
+        {
+            await http.DeleteAsync($"api/products/{productId}");
+            if (isConnected) await SendMessage();
+            navigationManager.NavigateTo("products");
+        }
+        else
+        {
+            navigationManager.NavigateTo("products");
+        }
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

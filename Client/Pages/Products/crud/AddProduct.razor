@@ -1,0 +1,36 @@
+﻿@page "/products/add"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Create</h3>
+
+<ProductsForm ButtonText="Create Product" Products="@product" OnValidSubmit="@CreateProduct" isReadOnly="false" />
+
+@code {
+    Products product = new Products();
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/ProductHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task CreateProduct()
+    {
+        await http.PostAsJsonAsync("api/products", product);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("products");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

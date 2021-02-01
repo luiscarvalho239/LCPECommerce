@@ -1,0 +1,135 @@
+﻿@page "/products"
+@using LCPECommerce.Client.Components.Pagination
+@inject HttpClient http
+@inject NavigationManager NavManager
+@inject IProductHttpRepo ProductRepo
+
+<h3>Produtos</h3>
+
+<div>
+    <a class="btn btn-success" href="products/add">New Product</a>
+</div>
+
+@if (products == null)
+{
+    <p>Loading...</p>
+}
+else if (products.Count() == 0)
+{
+    <p>There are not records in the database</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Desc</th>
+                    <th>Image</th>
+                    <th>Category</th>
+                    <th>CreationDate</th>
+                    <th>Stock</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in products)
+                {
+                    <tr>
+                        <td>@product.Id</td>
+                        <td>@product.Name</td>
+                        <td>@String.Format("{0:C2}", @product.Price)</td>
+                        <td>@product.Desc</td>
+                        <td>@product.Image</td>
+                        <td>@product.Category</td>
+                        <td>@product.CreationDate</td>
+                        <td>@product.Stock</td>
+                        <td>
+                            <a class="btn btn-success" href="products/edit/@product.Id">Edit</a>
+                            <a class="btn btn-danger" href="products/delete/@product.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Total: @String.Format("{0:C2}", totalprice)</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <Pagination MetaData="MetaData" Spread="2" SelectedPage="SelectedPage" />
+}
+
+@code {
+    public List<Products> products { get; set; } = new List<Products>();
+    public MetaData MetaData { get; set; } = new MetaData();
+    private ProductParameters _productParameters = new ProductParameters();
+
+    decimal totalprice = 0;
+
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    async Task LoadProducts()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavManager.ToAbsoluteUri("/ProductHub"))
+            .Build();
+
+        hubConnection.On("ReceiveMessage", () =>
+        {
+            CallLoadData();
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+        await LoadData();
+    }
+
+    private void CallLoadData()
+    {
+        Task.Run(async () =>
+        {
+            await LoadData();
+        });
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        _productParameters.PageNumber = page;
+        await LoadData();
+    }
+
+    protected async Task LoadData()
+    {
+        //products = await http.GetFromJsonAsync<Products[]>("api/products");
+        //totalprice = (decimal)products.Sum(x => x.Price * x.Stock);
+        var pagingResponse = await ProductRepo.GetProducts(_productParameters);
+        products = pagingResponse.Items;
+        MetaData = pagingResponse.MetaData;
+        totalprice = (decimal)products.Sum(x => x.Price * x.Stock);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

@@ -1,0 +1,11 @@
+﻿@page "/account/logout"
+@layout MainLayout
+@using LCPECommerce.Client.Services
+@inject IAccountService AccountService
+
+@code {
+    protected override async void OnInitialized()
+    {
+        await AccountService.Logout();
+    }
+}

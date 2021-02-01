@@ -1,0 +1,53 @@
+﻿@page "/options/delete/{optionId:int}"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+@inject IJSRuntime js
+
+<h3>Delete</h3>
+
+@if (option.Id != optionId)
+{
+    <p>The option does not exist</p>
+}
+else
+{
+    <OptionsForm ButtonText="Delete Option" Options="@option" OnValidSubmit="@DeleteOption" isReadOnly="true" />
+}
+
+@code {
+    [Parameter] public int optionId { get; set; }
+    Options option = new Options();
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        option = await http.GetFromJsonAsync<Options>($"api/options/{optionId}");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/OptionHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task DeleteOption()
+    {
+        if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {option.OptionName}?"))
+        {
+            await http.DeleteAsync($"api/options/{optionId}");
+            if (isConnected) await SendMessage();
+            navigationManager.NavigateTo("options");
+        }
+        else
+        {
+            navigationManager.NavigateTo("options");
+        }
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

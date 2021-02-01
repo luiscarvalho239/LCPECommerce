@@ -1,0 +1,46 @@
+﻿@page "/orders/edit/{orderId:int}"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Edit</h3>
+
+@if (order.Id != orderId)
+{
+    <p>The order does not exist</p>
+}
+else
+{
+    <OrdersForm ButtonText="Edit Order" Orders="@order" OnValidSubmit="@EditOrder" isReadOnly="false" />
+}
+
+@code {
+    [Parameter] public int orderId { get; set; }
+    Orders order = new Orders();
+
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        order = await http.GetFromJsonAsync<Orders>($"api/orders/{orderId}");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/OrderHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task EditOrder()
+    {
+        await http.PutAsJsonAsync($"api/orders/{orderId}", order);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("orders");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

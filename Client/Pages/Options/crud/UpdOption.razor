@@ -1,0 +1,46 @@
+﻿@page "/options/edit/{optionId:int}"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Edit</h3>
+
+@if (option.Id != optionId)
+{
+    <p>The option does not exist</p>
+}
+else
+{
+    <OptionsForm ButtonText="Edit Option" Options="@option" OnValidSubmit="@EditOption" isReadOnly="false" />
+}
+
+@code {
+    [Parameter] public int optionId { get; set; }
+    Options option = new Options();
+
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        option = await http.GetFromJsonAsync<Options>($"api/options/{optionId}");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/OptionHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task EditOption()
+    {
+        await http.PutAsJsonAsync($"api/options/{optionId}", option);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("options");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

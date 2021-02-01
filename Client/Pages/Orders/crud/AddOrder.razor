@@ -1,0 +1,36 @@
+﻿@page "/orders/add"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Create</h3>
+
+<OrdersForm ButtonText="Create Order" Orders="@order" OnValidSubmit="@CreateOrder" isReadOnly="false" />
+
+@code {
+    Orders order = new Orders();
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/OrderHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task CreateOrder()
+    {
+        await http.PostAsJsonAsync("api/orders", order);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("orders");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

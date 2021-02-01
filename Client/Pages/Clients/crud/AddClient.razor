@@ -1,0 +1,36 @@
+﻿@page "/clients/add"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Create</h3>
+
+<ClientsForm ButtonText="Create Client" Clients="@client" OnValidSubmit="@CreateClient" isReadOnly="false" />
+
+@code {
+    Clients client = new Clients();
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/ClientHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task CreateClient()
+    {
+        await http.PostAsJsonAsync("api/clients", client);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("clients");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

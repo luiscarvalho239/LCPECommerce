@@ -1,0 +1,35 @@
+﻿@inject NavigationManager navManager
+
+<EditForm Model="@Options" OnValidSubmit="@OnValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label>Name:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Options.OptionName" />
+            }
+            else
+            {
+                <input type="text" value="@Options.OptionName" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Options.OptionName)" />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">@ButtonText</button>
+    <button type="button" class="btn btn-primary" @onclick="@Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    [Parameter] public Options Options { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Save Category";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public bool isReadOnly { get; set; } = false;
+
+    void Cancel()
+    {
+        navManager.NavigateTo("options");
+    }
+}

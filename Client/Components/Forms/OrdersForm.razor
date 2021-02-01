@@ -1,0 +1,147 @@
+﻿@inject NavigationManager navManager
+
+<EditForm Model="@Orders" OnValidSubmit="@OnValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="form-group">
+        <label>Name:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Orders.OrderName" />
+            }
+            else
+            {
+                <input type="text" value="@Orders.OrderName" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Orders.OrderName)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Address:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Orders.OrderAddress" />
+            }
+            else
+            {
+                <input type="text" value="@Orders.OrderAddress" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Orders.OrderAddress)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Email:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Orders.OrderEmail" />
+            }
+            else
+            {
+                <input type="email" value="@Orders.OrderEmail" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Orders.OrderEmail)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Date:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputDateTime @bind-Value="@Orders.OrderDate" />
+            }
+            else
+            {
+                <input type="date" value="@Orders.OrderDate" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Orders.OrderDate)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Status:</label>
+        <div>
+            <input type="text" value="@Convert.ToString(Orders.OrderStatus)" readonly="@isReadOnly" />
+            <ValidationMessage For="@(() => Orders.OrderStatus)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Price:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputNumber @bind-Value="@Orders.Price" />
+            }
+            else
+            {
+                <input type="number" value="@Orders.Price" min="0" max="9999" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Orders.Price)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Quantity:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputNumber @bind-Value="@Orders.Quantity" />
+            }
+            else
+            {
+                <input type="number" value="@Orders.Quantity" min="0" max="999" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Orders.Quantity)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Shipping Address:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputText @bind-Value="@Orders.ShippingAddress" />
+            }
+            else
+            {
+                <input type="text" value="@Orders.ShippingAddress" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Orders.ShippingAddress)" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>ClientId:</label>
+        <div>
+            @if (isReadOnly == false)
+            {
+                <InputNumber @bind-Value="@Orders.ClientId" />
+            }
+            else
+            {
+                <input type="number" value="@Orders.ClientId" readonly="@isReadOnly" />
+            }
+
+            <ValidationMessage For="@(() => Orders.ClientId)" />
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary">@ButtonText</button>
+    <button type="button" class="btn btn-primary" @onclick="@Cancel">Cancel</button>
+</EditForm>
+
+@code {
+    [Parameter] public Orders Orders { get; set; }
+    [Parameter] public string ButtonText { get; set; } = "Save Order";
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+    [Parameter] public bool isReadOnly { get; set; } = false;
+
+    void Cancel()
+    {
+        navManager.NavigateTo("orders");
+    }
+}

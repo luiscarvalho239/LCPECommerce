@@ -1,0 +1,104 @@
+﻿@page "/clients"
+@inject HttpClient http
+@inject NavigationManager NavManager
+
+<h3>Clientes</h3>
+
+<div>
+    <a class="btn btn-success" href="clients/add">New Client</a>
+</div>
+
+@if (clients == null)
+{
+    <p>Loading...</p>
+}
+else if (clients.Length == 0)
+{
+    <p>There are not records in the database</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Password</th>
+                    <th>Full Name</th>
+                    <th>Billing Address</th>
+                    <th>Shipping Address</th>
+                    <th>Country</th>
+                    <th>Phone</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var client in clients)
+                {
+                    <tr>
+                        <td>@client.Id</td>
+                        <td>@client.Username</td>
+                        <td>@client.Email</td>
+                        <td>@client.Password</td>
+                        <td>@client.FullName</td>
+                        <td>@client.BillingAddress</td>
+                        <td>@client.ShippingAddress</td>
+                        <td>@client.Country</td>
+                        <td>@client.Phone</td>
+                        <td>
+                            <a class="btn btn-success" href="clients/edit/@client.Id">Edit</a>
+                            <a class="btn btn-danger" href="clients/delete/@client.Id">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    Clients[] clients { get; set; }
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClients();
+    }
+
+    async Task LoadClients()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavManager.ToAbsoluteUri("/ClientHub"))
+            .Build();
+
+        hubConnection.On("ReceiveMessage", () =>
+        {
+            CallLoadData();
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+        await LoadData();
+    }
+
+    private void CallLoadData()
+    {
+        Task.Run(async () =>
+        {
+            await LoadData();
+        });
+    }
+
+    protected async Task LoadData()
+    {
+        clients = await http.GetFromJsonAsync<Clients[]>("api/clients");
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

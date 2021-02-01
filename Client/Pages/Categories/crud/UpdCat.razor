@@ -1,0 +1,46 @@
+﻿@page "/categories/edit/{catId:int}"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+
+<h3>Edit</h3>
+
+@if (category.Id != catId)
+{
+    <p>The category does not exist</p>
+}
+else
+{
+    <CategoriesForm ButtonText="Edit Category" Categories="@category" OnValidSubmit="@EditCategory" isReadOnly="false" />
+}
+
+@code {
+    [Parameter] public int catId { get; set; }
+    Categories category = new Categories();
+
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        category = await http.GetFromJsonAsync<Categories>($"api/categories/{catId}");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/CategoryHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task EditCategory()
+    {
+        await http.PutAsJsonAsync($"api/categories/{catId}", category);
+        if (isConnected) await SendMessage();
+        navigationManager.NavigateTo("categories");
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}

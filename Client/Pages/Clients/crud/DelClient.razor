@@ -1,0 +1,55 @@
+﻿@page "/clients/delete/{clientId:int}"
+@inject HttpClient http
+@inject NavigationManager navigationManager
+@inject IJSRuntime js
+
+<h3>Delete</h3>
+
+@if (client.Id != clientId)
+{
+    <p>The client does not exist</p>
+}
+else
+{
+    <ClientsForm ButtonText="Delete Client" Clients="@client" OnValidSubmit="@DeleteClient" isReadOnly="true" />
+}
+
+@code {
+    [Parameter] public int clientId { get; set; }
+    Clients client = new Clients();
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        client = await http.GetFromJsonAsync<Clients>($"api/clients/{clientId}");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/ClientHub"))
+            .Build();
+        await hubConnection.StartAsync();
+    }
+
+    public bool isConnected => hubConnection.State == HubConnectionState.Connected;
+
+    async Task DeleteClient()
+    {
+        client.IsDeleting = true;
+
+        if (await js.InvokeAsync<bool>("confirm", $"Do you want to delete {client.FullName}?"))
+        {
+            await http.DeleteAsync($"api/clients/{clientId}");
+            if (isConnected) await SendMessage();
+            navigationManager.NavigateTo("clients");
+        }
+        else
+        {
+            navigationManager.NavigateTo("clients");
+        }
+    }
+
+    Task SendMessage() => hubConnection.SendAsync("SendMessage");
+
+    public void Dispose()
+    {
+        _ = hubConnection.DisposeAsync();
+    }
+}
